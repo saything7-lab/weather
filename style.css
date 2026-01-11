@@ -30,8 +30,54 @@ body {
     padding: 25px;
     color: white;
     margin-top: 20px;
-    display: none; /* Изначально скрыта, показывается после загрузки */
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
 }
+
+.weather-card.show {
+    animation: cardAppear 0.8s ease-out forwards;
+}
+
+@keyframes cardAppear {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateY(-5px) scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Анимация для внутренних элементов с задержкой */
+.weather-card.show .city-info {
+    animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
+.weather-card.show .weather-main {
+    animation: fadeInUp 0.5s ease-out 0.4s both;
+}
+
+.weather-card.show .weather-details {
+    animation: fadeInUp 0.5s ease-out 0.6s both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 
 .temperature {
     font-size: 4rem;
@@ -49,8 +95,10 @@ body {
     display: flex;
     align-items: center;
     background: rgba(255, 255, 255, 0.2);
-    padding: 10px 15px;
+    padding: 12px 15px; /* Увеличиваем padding */
     border-radius: 10px;
+    gap: 12px; /* Добавляем отступ между иконкой и текстом */
+    margin: 5px 0; /* Небольшой отступ между блоками */
 }
 
 /* Адаптивность */
@@ -82,4 +130,565 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+/* ===== СТИЛИ ДЛЯ ПОИСКА И ИНПУТА ===== */
+
+/* Контейнер поиска */
+.search-container {
+    display: flex;
+    gap: 15px;
+    margin: 25px 0 15px;
+    align-items: center;
+}
+
+@media (max-width: 600px) {
+    .search-container {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+/* Обёртка для инпута */
+.search-input-wrapper {
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
+}
+
+/* Иконка поиска в инпуте */
+.search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3498db;
+    font-size: 18px;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+/* Поле ввода города */
+.city-input {
+    width: 100%;
+    padding: 18px 55px 18px 50px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #2c3e50;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e0e6ed;
+    border-radius: 16px;
+    outline: none;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    font-family: 'Roboto', sans-serif;
+}
+
+.city-input:focus {
+    border-color: #3498db;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+    box-shadow: 0 6px 25px rgba(52, 152, 219, 0.2);
+    transform: translateY(-2px);
+}
+
+.city-input:focus + .search-icon {
+    color: #2980b9;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.city-input::placeholder {
+    color: #95a5a6;
+    font-weight: 400;
+}
+
+/* Кнопка очистки в инпуте */
+.input-actions {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.clear-btn {
+    background: none;
+    border: none;
+    color: #95a5a6;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+}
+
+.city-input:not(:placeholder-shown) ~ .input-actions .clear-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.clear-btn:hover {
+    color: #e74c3c;
+    background-color: rgba(231, 76, 60, 0.1);
+    transform: scale(1.1);
+}
+
+/* Кнопка поиска */
+.search-button {
+    padding: 0 30px;
+    height: 60px;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+    min-width: 140px;
+    position: relative;
+    overflow: hidden;
+}
+
+.search-button:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #1f6398 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(52, 152, 219, 0.4);
+}
+
+.search-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+/* Эффект "волны" при клике */
+.search-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.search-button:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(20, 20);
+        opacity: 0;
+    }
+}
+
+.search-btn-icon {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+}
+
+.search-button:hover .search-btn-icon {
+    transform: scale(1.1);
+}
+
+.search-btn-text {
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 600px) {
+    .search-button {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+/* Подсказка под поиском */
+.search-hint {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 14px;
+    margin-top: 10px;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+/* ===== СТИЛИ ДЛЯ КНОПКИ ОБНОВЛЕНИЯ ===== */
+
+.refresh-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 25px 0 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.6) 100%);
+    border-radius: 16px;
+    border: 1px dashed #dee2e6;
+    gap: 15px;
+}
+
+.refresh-hint {
+    color: #6c757d;
+    font-size: 14px;
+    text-align: center;
+    font-style: italic;
+    max-width: 400px;
+    line-height: 1.5;
+}
+
+/* Кнопка обновления */
+.refresh-button {
+    padding: 16px 35px;
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+    min-width: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.refresh-button:hover {
+    background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(46, 204, 113, 0.4);
+    gap: 15px;
+}
+
+.refresh-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.refresh-icon {
+    font-size: 18px;
+    transition: all 0.5s ease;
+}
+
+.refresh-button:hover .refresh-icon {
+    transform: rotate(180deg);
+}
+
+.refresh-button.loading .refresh-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.refresh-text {
+    letter-spacing: 0.5px;
+}
+
+/* Эффект пульсации для кнопки обновления */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
+}
+
+.refresh-button.pulse {
+    animation: pulse 2s infinite;
+}
+
+/* ===== ОБЩИЕ ОТСТУПЫ И АНИМАЦИИ ===== */
+
+/* Плавные переходы для всех интерактивных элементов */
+button, input, .city-clickable-name, .city-delete-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Улучшенные отступы для секций */
+.weather-display {
+    margin: 20px 0 30px;
+}
+
+.recent-cities {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #e9ecef;
+}
+
+.recent-cities h3 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Анимация появления элементов */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+/* Обёртка для каждого города */
+.city-history-wrapper {
+    margin-bottom: 10px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 1px solid #dee2e6;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.city-history-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #c5e1ff;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%);
+}
+
+/* Внутренний блок */
+.city-history-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    cursor: default;
+    user-select: none;
+}
+
+/* Контейнер для иконки и названия */
+.city-history-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-grow: 1;
+    min-width: 0; /* Для корректного обрезания длинных названий */
+}
+
+/* Иконка города */
+.city-history-emoji {
+    font-size: 20px;
+    opacity: 0.8;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+}
+
+.city-history-wrapper:hover .city-history-emoji {
+    opacity: 1;
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* НАЗВАНИЕ ГОРОДА - ЕДИНСТВЕННЫЙ КЛИКАБЕЛЬНЫЙ ЭЛЕМЕНТ */
+.city-history-name {
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    background: transparent;
+    border: 2px solid transparent;
+    flex-grow: 1;
+}
+
+/* Эффект при наведении ТОЛЬКО на название */
+.city-history-name--hover {
+    color: #1a5276 !important;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(41, 128, 185, 0.15) 100%) !important;
+    border-color: rgba(52, 152, 219, 0.3) !important;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+    text-decoration: none !important;
+}
+
+/* Псевдоэлемент для анимированного подчёркивания */
+.city-history-name::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(to right, #3498db, #2c3e50);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.city-history-name--hover::after {
+    width: calc(100% - 24px);
+}
+
+/* Активный город (после клика) */
+.city-history-name--active {
+    color: #1a5276 !important;
+    font-weight: 600 !important;
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.2) 0%, rgba(41, 128, 185, 0.25) 100%) !important;
+    border-color: #3498db !important;
+    box-shadow: inset 0 2px 8px rgba(52, 152, 219, 0.2), 0 2px 4px rgba(52, 152, 219, 0.1);
+}
+
+/* КНОПКА УДАЛЕНИЯ */
+.city-history-delete {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid #dee2e6;
+    color: #95a5a6;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    margin-left: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.city-history-delete:hover {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    border-color: #e74c3c !important;
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.city-history-delete--hover {
+    transform: scale(1.05);
+}
+
+/* Сообщение об пустой истории */
+.empty-history {
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: 2px dashed #ced4da;
+    font-size: 16px;
+    margin: 15px 0;
+}
+
+/* Анимация появления элементов */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.city-history-wrapper {
+    animation: slideIn 0.4s ease-out forwards;
+    opacity: 0;
+}
+
+/* Задержка для каждого следующего элемента */
+.city-history-wrapper:nth-child(1) { animation-delay: 0.1s; }
+.city-history-wrapper:nth-child(2) { animation-delay: 0.2s; }
+.city-history-wrapper:nth-child(3) { animation-delay: 0.3s; }
+.city-history-wrapper:nth-child(4) { animation-delay: 0.4s; }
+.city-history-wrapper:nth-child(5) { animation-delay: 0.5s; }
+
+/* Адаптивность */
+@media (max-width: 600px) {
+    .city-history-inner {
+        padding: 12px 15px;
+    }
+
+    .city-history-name {
+        font-size: 15px;
+        padding: 5px 10px;
+    }
+
+    .city-history-emoji {
+        font-size: 18px;
+    }
+
+    .city-history-delete {
+        width: 36px;
+        height: 36px;
+        padding: 6px 10px;
+    }
+}
+
+/* Тем, кто любит минимализм (альтернативный стиль) */
+.city-history-wrapper.minimalist {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    box-shadow: none;
+}
+
+.city-history-wrapper.minimalist:hover {
+    border-color: #3498db;
+    box-shadow: 0 1px 3px rgba(52, 152, 219, 0.1);
+}
+
+.city-history-name.minimalist {
+    border: none;
+    padding: 4px 8px;
+    background: transparent;
+}
+
+.city-history-name--hover.minimalist {
+    color: #3498db !important;
+    background: transparent !important;
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 4px !important;
+    transform: none;
+    box-shadow: none;
 }
