@@ -120,30 +120,28 @@ let fetchCount = 0;
 // Основная функция получения погоды
 async function fetchWeather(city) {
   try {
-    showLoading();
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&lang=ru&appid=${API_KEY}`,
+    );
 
-    const url = `${BASE_URL}?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}&lang=ru`;
-    const response = await fetch(url);
-
-    if (!response.ok) throw new Error('Город не найден');
+    if (!response.ok) {
+      if (response.status === 404) {
+        currentCityElement.textContent = `Город "${city}" не найден`;
+        throw new Error('Город не найден');
+      } else {
+        currentCityElement.textContent = 'Ошибка при получении данных';
+        throw new Error('Ошибка сети');
+      }
+    }
 
     const data = await response.json();
-
-    // Обновляем состояние
-    state.currentCity = data.name;
-    localStorage.setItem('lastCity', data.name);
-
-    // Добавляем в историю с полными данными
-    addToRecentCities(data);
-
-    updateWeatherDisplay(data);
-    showWeatherCard();
+    displayWeather(data);
+    addToRecent(city);
   } catch (error) {
-    showError();
-    console.error('Ошибка:', error);
+    console.error('Ошибка при получении погоды:', error);
+    currentCityElement.textContent = error.message;
   }
-}
-// Функция обновления интерфейса с данными о погоде
+}// Функция обновления интерфейса с данными о погоде
 function updateWeatherDisplay(data) {
   // Обновляем основные данные
   elements.cityName.textContent = data.name + ', ' + data.sys.country;
