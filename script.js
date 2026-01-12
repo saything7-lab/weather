@@ -417,6 +417,9 @@ function getWeatherIcon(iconCode, description = '') {
 }
 
 function getWeatherIconFromDescription(description, iconCode = '') {
+  if (!description || typeof description !== 'string') {
+    return 'fas fa-question-circle'; // Иконка по умолчанию
+  }
   const desc = description.toLowerCase();
   if (desc.includes('ясн') || desc.includes('clear')) {
     return iconCode?.endsWith('n') ? '🌙' : '☀️';
