@@ -692,3 +692,106 @@ button, input, .city-clickable-name, .city-delete-button {
     transform: none;
     box-shadow: none;
 }
+
+/* Стили для истории с иконками погоды */
+
+/* Иконка погоды в истории */
+.history-weather-icon {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+    transition: transform 0.3s ease;
+}
+
+.city-history-wrapper:hover .history-weather-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Информация о городе */
+.history-city-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.history-city-name {
+    color: #2c3e50;
+    font-weight: 500;
+    font-size: 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s ease;
+}
+
+.history-city-name:hover {
+    color: #3498db;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.history-city-temp {
+    color: #e74c3c;
+    font-weight: 600;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.3);
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+    width: fit-content;
+}
+
+/* Активный город в истории */
+.city-history-content.active {
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: 8px;
+    padding: 5px 10px;
+    margin: -5px -10px;
+}
+
+.city-history-content.active .history-city-name {
+    color: #1a5276;
+    font-weight: 600;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 600px) {
+    .history-weather-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .history-city-name {
+        font-size: 15px;
+    }
+
+    .history-city-temp {
+        font-size: 13px;
+        padding: 2px 6px;
+    }
+}
+
+/* Анимация появления элементов истории */
+@keyframes slideInWithIcon {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.city-history-wrapper {
+    animation: slideInWithIcon 0.4s ease-out forwards;
+    opacity: 0;
+}
+
+.city-history-wrapper:nth-child(1) { animation-delay: 0.1s; }
+.city-history-wrapper:nth-child(2) { animation-delay: 0.2s; }
+.city-history-wrapper:nth-child(3) { animation-delay: 0.3s; }

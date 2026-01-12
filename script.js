@@ -119,57 +119,30 @@ document.addEventListener('DOMContentLoaded', () => {
 let fetchCount = 0;
 // Основная функция получения погоды
 async function fetchWeather(city) {
-
-  // СРАЗУ скрываем карточку
-  if (elements.weatherCard) {
-    elements.weatherCard.style.display = 'none';
-    elements.weatherCard.classList.remove('show');
-  } try {
-    // Показываем индикатор загрузки
+  try {
     showLoading();
 
-    // Формируем URL запроса
     const url = `${BASE_URL}?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}&lang=ru`;
-
-    // Отправляем запрос
     const response = await fetch(url);
 
-    if (!response.ok) {
-      throw new Error('Город не найден');
-    }
+    if (!response.ok) throw new Error('Город не найден');
 
-    // Парсим ответ
     const data = await response.json();
 
     // Обновляем состояние
-    state.currentCity = city;
+    state.currentCity = data.name;
+    localStorage.setItem('lastCity', data.name);
 
-    // Сохраняем в localStorage
-    localStorage.setItem('lastCity', city);
+    // Добавляем в историю с полными данными
+    addToRecentCities(data);
 
-    // Добавляем в историю
-    addToRecentCities(city);
-
-    // Обновляем интерфейс
     updateWeatherDisplay(data);
-
-    // Показываем карточку
     showWeatherCard();
-    if (elements.refreshBtn) {
-      setTimeout(() => {
-        elements.refreshBtn.classList.remove('loading');
-      }, 500);
-    }
   } catch (error) {
-    // Показываем ошибку
     showError();
-    console.error('Ошибка при получении погоды:', error);
-    if (elements.refreshBtn) {
-      elements.refreshBtn.classList.remove('loading');
-    }
+    console.error('Ошибка:', error);
   }
 }
-
 // Функция обновления интерфейса с данными о погоде
 function updateWeatherDisplay(data) {
   // Обновляем основные данные
@@ -262,17 +235,24 @@ function updateCurrentDate() {
   elements.currentDate.textContent = now.toLocaleDateString('ru-RU', options);
 }
 
-function addToRecentCities(city) {
-  // Приводим к единому регистру для сравнения
-  const normalizedCity = city.trim();
+function addToRecentCities(cityData) {
+  // cityData теперь объект с полными данными
+  const cityEntry = {
+    city: cityData.name.trim(),
+    country: cityData.sys.country,
+    icon: cityData.weather[0].icon,
+    temp: Math.round(cityData.main.temp),
+    description: cityData.weather[0].description,
+    timestamp: Date.now() // для сортировки
+  };
 
-  // Удаляем город, если он уже есть в истории
+  // Удаляем если город уже есть в истории
   state.recentCities = state.recentCities.filter(
-    (c) => c.trim().toLowerCase() !== normalizedCity.toLowerCase(),
+    (entry) => entry.city.toLowerCase() !== cityEntry.city.toLowerCase()
   );
 
-  // Добавляем город в начало массива
-  state.recentCities.unshift(normalizedCity);
+  // Добавляем в начало
+  state.recentCities.unshift(cityEntry);
 
   // Ограничиваем 3 городами
   if (state.recentCities.length > 3) {
@@ -289,11 +269,15 @@ function addToRecentCities(city) {
 function loadRecentCities() {
   const saved = localStorage.getItem('recentCities');
   if (saved) {
-    state.recentCities = JSON.parse(saved);
-    updateRecentCitiesDisplay();
+    try {
+      state.recentCities = JSON.parse(saved);
+      updateRecentCitiesDisplay();
+    } catch (error) {
+      console.error('Ошибка загрузки истории:', error);
+      state.recentCities = [];
+    }
   }
 }
-
 function updateRecentCitiesDisplay() {
   elements.recentCities.innerHTML = '';
 
@@ -303,8 +287,8 @@ function updateRecentCitiesDisplay() {
     return;
   }
 
-  state.recentCities.forEach((city) => {
-    // Контейнер - просто фон
+  state.recentCities.forEach((entry) => {
+    // Контейнер
     const wrapper = document.createElement('div');
     wrapper.className = 'city-history-wrapper';
 
@@ -312,25 +296,33 @@ function updateRecentCitiesDisplay() {
     const inner = document.createElement('div');
     inner.className = 'city-history-inner';
 
-    // Блок с иконкой и названием
+    // Блок с иконкой погоды и названием
     const content = document.createElement('div');
     content.className = 'city-history-content';
 
-    // Иконка (выберите любую из вариантов ниже)
-    const icon = document.createElement('span');
-    icon.className = 'city-history-emoji';
-    // Варианты иконок (раскомментируйте нужную):
-    // icon.textContent = '📍'; // Метка на карте
-    // icon.textContent = '🌤️'; // Легкая облачность
-    // icon.textContent = '🏙️'; // Городской пейзаж
-    icon.textContent = '🗺️'; // Карта
-    // icon.textContent = '🌆'; // Закат города
-    // icon.innerHTML = '<i class="fas fa-city"></i>'; // Font Awesome
+    // Иконка погоды (маленькая)
+    const weatherIcon = document.createElement('img');
+    weatherIcon.className = 'history-weather-icon';
+    weatherIcon.src = `https://openweathermap.org/img/wn/${entry.icon}.png`;
+    weatherIcon.alt = entry.description;
+    weatherIcon.title = entry.description;
+    weatherIcon.width = 30;
+    weatherIcon.height = 30;
 
-    // Название города (ЕДИНСТВЕННЫЙ кликабельный элемент)
-    const cityEl = document.createElement('span');
-    cityEl.className = 'city-history-name';
-    cityEl.textContent = city;
+    // Название города и температура
+    const cityInfo = document.createElement('div');
+    cityInfo.className = 'history-city-info';
+
+    const cityName = document.createElement('span');
+    cityName.className = 'history-city-name';
+    cityName.textContent = entry.city;
+
+    const cityTemp = document.createElement('span');
+    cityTemp.className = 'history-city-temp';
+    cityTemp.textContent = `${entry.temp}°C`;
+
+    cityInfo.appendChild(cityName);
+    cityInfo.appendChild(cityTemp);
 
     // Кнопка удаления
     const deleteBtn = document.createElement('button');
@@ -340,86 +332,45 @@ function updateRecentCitiesDisplay() {
     deleteBtn.type = 'button';
 
     // Собираем структуру
-    content.appendChild(icon);
-    content.appendChild(cityEl);
+    content.appendChild(weatherIcon);
+    content.appendChild(cityInfo);
     inner.appendChild(content);
     inner.appendChild(deleteBtn);
     wrapper.appendChild(inner);
 
     // ОБРАБОТЧИКИ СОБЫТИЙ:
 
-    // 1. ТОЛЬКО на названии города
-    cityEl.addEventListener('click', (e) => {
+    // Клик по всей области города
+    content.addEventListener('click', (e) => {
       e.stopPropagation();
-
-      // Заполняем поле ввода
-      elements.cityInput.value = city;
-
-      // Получаем погоду
-      fetchWeather(city);
+      elements.cityInput.value = entry.city;
+      fetchWeather(entry.city);
 
       // Подсветка активного города
-      document.querySelectorAll('.city-history-name').forEach((el) => {
-        el.classList.remove('city-history-name--active');
+      document.querySelectorAll('.city-history-content').forEach((el) => {
+        el.classList.remove('active');
       });
-      cityEl.classList.add('city-history-name--active');
+      content.classList.add('active');
     });
 
-    // Эффекты при наведении на название
-    cityEl.addEventListener('mouseenter', () => {
-      cityEl.classList.add('city-history-name--hover');
-    });
-
-    cityEl.addEventListener('mouseleave', () => {
-      cityEl.classList.remove('city-history-name--hover');
-    });
-
-    // 2. ТОЛЬКО на кнопке удаления
+    // Кнопка удаления
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-
-      // Подтверждение удаления
-      const confirmed = window.confirm(`Удалить "${city}" из истории?`);
-      if (confirmed) {
-        // Удаляем из массива
-        state.recentCities = state.recentCities.filter((c) => c !== city);
-
-        // Сохраняем в localStorage
+      if (confirm(`Удалить "${entry.city}" из истории?`)) {
+        state.recentCities = state.recentCities.filter(
+          (item) => item.city !== entry.city,
+        );
         localStorage.setItem(
           'recentCities',
           JSON.stringify(state.recentCities),
         );
-
-        // Обновляем отображение
         updateRecentCitiesDisplay();
-
-        // Показываем уведомление
-        console.log(`Город "${city}" удалён из истории`);
-      }
-    });
-
-    // Эффекты при наведении на кнопку удаления
-    deleteBtn.addEventListener('mouseenter', () => {
-      deleteBtn.classList.add('city-history-delete--hover');
-    });
-
-    deleteBtn.addEventListener('mouseleave', () => {
-      deleteBtn.classList.remove('city-history-delete--hover');
-    });
-
-    // 3. Явно запрещаем клики на контейнере
-    wrapper.addEventListener('click', (e) => {
-      // Если кликнули именно на wrapper (не на дочерние элементы)
-      if (e.target === wrapper || e.target === inner || e.target === content) {
-        e.preventDefault();
-        e.stopPropagation();
       }
     });
 
     elements.recentCities.appendChild(wrapper);
   });
 }
-
 function preventTextSelection() {
   // Предотвращаем выделение текста при клике
   document.addEventListener(
