@@ -176,3 +176,56 @@
         min-width: auto;
     }
 }
+#suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover:not(.disabled) {
+    background-color: #f5f5f5;
+}
+
+.suggestion-item.disabled {
+    color: #999;
+    cursor: default;
+}
+
+.city-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.country-code {
+    font-size: 12px;
+    color: #999;
+    margin-left: 8px;
+}
+
+/* Чтобы input поле было позиционировано относительно */
+#city-input {
+    position: relative;
+}
+
+#city-input.parent {
+    position: relative;
+}
