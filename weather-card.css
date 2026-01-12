@@ -1,0 +1,150 @@
+/* ===== КАРТОЧКА ПОГОДЫ ===== */
+.weather-display {
+    margin: 20px 0 30px;
+}
+
+.weather-card {
+    background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+    border-radius: 15px;
+    padding: 25px;
+    color: white;
+    margin-top: 20px;
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.weather-card.show {
+    animation: cardAppear 0.8s ease-out forwards;
+}
+
+.weather-card.show .city-info {
+    animation: fadeInUp 0.5s ease-out 0.2s both;
+}
+
+.weather-card.show .weather-main {
+    animation: fadeInUp 0.5s ease-out 0.4s both;
+}
+
+.weather-card.show .weather-details {
+    animation: fadeInUp 0.5s ease-out 0.6s both;
+}
+
+.temperature {
+    font-size: 4rem;
+    font-weight: 300;
+}
+
+.weather-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.detail {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 12px 15px;
+    border-radius: 10px;
+    gap: 12px;
+    margin: 5px 0;
+}
+
+.spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@media (max-width: 600px) {
+    .weather-details {
+        grid-template-columns: 1fr;
+    }
+
+    .temperature {
+        font-size: 3rem;
+    }
+}
+/* Стили для блока с иконкой и описанием погоды */
+.weather-info-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Выравнивание по правому краю */
+    margin: 15px 0;
+    padding: 0 20px;
+    gap: 20px;
+}
+
+.weather-emoji-container {
+    font-size: 48px; /* Большая иконка */
+    line-height: 1;
+    filter: drop-shadow(0 3px 5px rgba(0,0,0,0.2));
+}
+
+.weather-main-emoji {
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.weather-description-container {
+    text-align: right;
+    min-width: 200px;
+}
+
+.weather-main-description {
+    font-size: 22px; /* Крупный текст */
+    font-weight: 500;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    line-height: 1.2;
+    margin-bottom: 5px;
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+    .weather-info-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .weather-emoji-container {
+        font-size: 36px;
+    }
+
+    .weather-main-description {
+        font-size: 18px;
+        text-align: center;
+    }
+
+    .weather-description-container {
+        min-width: auto;
+    }
+}
+
+/* Для темной темы карточки погоды */
+.weather-card .weather-main-description {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+}
+
+/* Эффект при наведении */
+.weather-info-container:hover .weather-main-emoji {
+    transform: scale(1.1);
+}
+
+.weather-info-container:hover .weather-main-description {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+}

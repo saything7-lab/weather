@@ -1,0 +1,74 @@
+/* ===== КНОПКА ОБНОВЛЕНИЯ ===== */
+.refresh-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 25px 0 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.6) 100%);
+    border-radius: 16px;
+    border: 1px dashed #dee2e6;
+    gap: 15px;
+}
+
+.refresh-hint {
+    color: #6c757d;
+    font-size: 14px;
+    text-align: center;
+    font-style: italic;
+    max-width: 400px;
+    line-height: 1.5;
+}
+
+.refresh-button {
+    padding: 16px 35px;
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+    min-width: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.refresh-button:hover {
+    background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(46, 204, 113, 0.4);
+    gap: 15px;
+}
+
+.refresh-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.refresh-icon {
+    font-size: 18px;
+    transition: all 0.5s ease;
+}
+
+.refresh-button:hover .refresh-icon {
+    transform: rotate(180deg);
+}
+
+.refresh-button.loading .refresh-icon {
+    animation: spin 1s linear infinite;
+}
+
+.refresh-text {
+    letter-spacing: 0.5px;
+}
+
+.refresh-button.pulse {
+    animation: pulse 2s infinite;
+}

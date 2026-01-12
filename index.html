@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="wid  th=device-width, initial-scale=1.0">
     <title>Погодное приложение</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="base.css">
+    <link rel="stylesheet" href="search.css">
+    <link rel="stylesheet" href="weather-card.css">
+    <link rel="stylesheet" href="refresh.css">
+    <link rel="stylesheet" href="recent-cities.css">
     <!-- Иконки (можно использовать Font Awesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Шрифт Google -->
@@ -113,18 +117,40 @@
             </div>
         </section>
         <span class="reload">Чтобы обновить данные о погоде, нажмите эту кнопку</span>
-        <section class="recent-cities">
-            <h3><i class="fas fa-history"></i> Недавние города</h3>
-            <div class="cities-list" id="recent-cities">
-                <!-- Список будет заполняться через JS -->
-            </div>
-        </section>
-    </main>
+        <div class="recent-cities">
+            <h3>Недавние города</h3>
+            <div class="recent-cities-list">
+                <!-- Элемент города 1 -->
+                <div class="recent-city-item">
+                    <div class="recent-city-name-container">
+                        <span class="city-icon">🏛️</span>
+                        <span class="recent-city-name">Санкт-Петербург</span>
+                    </div>
+                    <div class="recent-city-temp-container">
+                        <span class="recent-city-temp">-8°C</span>
+                        <button class="recent-city-delete">×</button>
+                    </div>
+                </div>
 
-    <footer>
-        <p>Данные предоставлены <a href="https://openweathermap.org/" target="_blank">OpenWeatherMap</a></p>
-        <p class="footer-note">Проект для демонстрации навыков HTML, CSS и JavaScript</p>
-    </footer>
+                <!-- Элемент города 2 -->
+                <div class="recent-city-item">
+                    <div class="recent-city-name-container">
+                        <span class="city-icon">🏙️</span>
+                        <span class="recent-city-name">Москва</span>
+                    </div>
+                    <div class="recent-city-temp-container">
+                        <span class="recent-city-temp">-4°C</span>
+                        <button class="recent-city-delete">×</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-note">
+                Данные предоставлены OpenWeatherMap<br>
+                Проект для демонстрации навыков HTML, CSS и JavaScript
+            </div>
+        </div>
+        </main>
 </div>
 
 <script src="script.js"></script>
