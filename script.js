@@ -97,6 +97,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Основная функция получения погоды
 async function fetchWeather(city) {
+  const forbiddenNames = [
+    'россия',
+    'russia',
+    'ru',
+    'rf',
+    'сша',
+    'usa',
+    'united states',
+    'us',
+    'китай',
+    'china',
+    'cn',
+    'германия',
+    'germany',
+    'de',
+    'франция',
+    'france',
+    'fr',
+    'испания',
+    'spain',
+    'es',
+    'италия',
+    'italy',
+    'it',
+  ];
+
+  // 2. Проверяем введенное название
+  const normalizedCity = city.toLowerCase().trim();
+
+  if (forbiddenNames.includes(normalizedCity)) {
+    alert(
+      '⚠️ Пожалуйста, введите название ГОРОДА (например: Москва, Нью-Йорк), а не страны.',
+    );
+    hideLoading(); // Скрываем индикатор загрузки, если он есть
+    if (elements.refreshBtn) elements.refreshBtn.classList.remove('loading');
+    return; // Прерываем выполнение функции
+  }
+
+  // 3. Дополнительная проверка: если введено очень короткое или общее название
+  if (city.length < 2 || normalizedCity === 'город') {
+    alert('⚠️ Пожалуйста, введите более конкретное название города.');
+    hideLoading();
+    if (elements.refreshBtn) elements.refreshBtn.classList.remove('loading');
+    return;
+  }
+
   if (elements.weatherCard) {
     elements.weatherCard.style.display = 'none';
     elements.weatherCard.classList.remove('show');
@@ -112,6 +158,7 @@ async function fetchWeather(city) {
     const data = await response.json();
     state.currentCity = data.name;
     localStorage.setItem('lastCity', data.name);
+    console.log('API вернул город:', data.name);
 
     // Добавляем в историю с полными данными
     addToRecentCities(data);
@@ -127,6 +174,7 @@ async function fetchWeather(city) {
     console.error('Ошибка:', error);
     if (elements.refreshBtn) elements.refreshBtn.classList.remove('loading');
   }
+
 }
 
 // Функция обновления интерфейса с данными о погоде
@@ -475,11 +523,6 @@ function loadRecentCities() {
 }
 
 // Загружаем историю при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-  // ... ваш существующий код ...
-
-  loadRecentCities();
-});
 function preventTextSelection() {
   document.addEventListener(
     'mousedown',

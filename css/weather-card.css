@@ -148,3 +148,29 @@
     color: #fff;
     text-shadow: 0 0 10px rgba(255,255,255,0.3);
 }
+/* Стили для контейнера, который создаёт JavaScript */
+.weather-info-container {
+    display: flex;           /* Размещаем иконку и описание в строку */
+    align-items: center;     /* Выравниваем по вертикали по центру */
+    gap: 10px;               /* Расстояние между иконкой и текстом */
+    margin-top: 10px;        /* Отступ сверху от температуры */
+    margin-bottom: 15px;     /* Отступ снизу к деталям (влажность, ветер) */
+}
+
+/* Стили для иконки (эмодзи) */
+.weather-main-emoji {
+    font-size: 2em;          /* Увеличиваем размер эмодзи */
+    display: block;          /* Чтобы работали отступы */
+}
+
+/* Стили для описания погоды */
+.weather-main-description {
+    font-size: 1.5em;        /* Увеличиваем шрифт */
+    font-weight: bold;       /* Делаем жирным */
+    color: #2c3e50;          /* Цвет текста (можно изменить) */
+}
+.weather-main {
+    display: flex;
+    flex-direction: column;  /* Температура сверху, потом иконка+описание */
+    align-items: center;     /* Центрируем по горизонтали */
+}
