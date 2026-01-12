@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/weather-card.css">
     <link rel="stylesheet" href="css/refresh.css">
     <link rel="stylesheet" href="css/recent-cities.css">
+    <link rel="stylesheet" href="css/forecast.css">
     <!-- Иконки (можно использовать Font Awesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Шрифт Google -->
@@ -53,6 +54,16 @@
                 <i class="fas fa-sync-alt refresh-icon"></i>
                 <span class="refresh-text">Обновить</span>
             </button>
+        </div>
+        <!-- Замените блок .forecast-toggle-section на этот: -->
+        <div class="forecast-toggle-section">
+            <span class="forecast-label">Показать:</span>
+            <div class="forecast-toggle">
+                <button class="forecast-btn active" data-days="1">Сейчас</button>
+                <button class="forecast-btn" data-days="2">Завтра</button>
+                <button class="forecast-btn" data-days="3">Послезавтра</button>
+                <button class="forecast-btn" data-days="5">5 дней</button>
+            </div>
         </div>
 
         <section class="weather-display">
@@ -112,6 +123,9 @@
                 <i class="fas fa-exclamation-triangle"></i>
                 <p>Город не найден. Проверьте правильность написания.</p>
             </div>
+            <div class="weather-forecast" id="weather-forecast">
+                <!-- Сюда будет вставляться прогноз через JS -->
+            </div>
         </section>
 
         <div class="recent-cities">
@@ -144,7 +158,6 @@
 
             <div class="footer-note">
                 Данные предоставлены OpenWeatherMap<br>
-                Проект для демонстрации навыков HTML, CSS и JavaScript
             </div>
         </div>
         </main>

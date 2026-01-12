@@ -21,12 +21,16 @@ const elements = {
   recentCities: document.getElementById('recent-cities'),
   clearInputBtn: null,
   refreshBtn: document.getElementById('refresh-btn'),
+  weatherForecast: document.getElementById('weather-forecast'),
+  forecastToggle: document.querySelector('.forecast-toggle'),
 };
 
 // Состояние приложения
 const state = {
   currentCity: 'Москва',
   recentCities: [],
+  currentForecastDays: 1,
+  forecastData: null,
 };
 
 // Инициализация
@@ -82,60 +86,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  setInterval(() => {
-    if (
-      elements.refreshBtn &&
-      !elements.refreshBtn.classList.contains('loading')
-    ) {
-      elements.refreshBtn.classList.add('pulse');
-      setTimeout(() => {
-        if (elements.refreshBtn) elements.refreshBtn.classList.remove('pulse');
-      }, 2000);
-    }
-  }, 30000);
+  if (elements.forecastToggle) {
+    elements.forecastToggle.addEventListener('click', (e) => {
+      if (e.target.classList.contains('forecast-btn')) {
+        const days = parseInt(e.target.dataset.days);
+        toggleForecast(days);
+      }
+    });
+  }
 });
 
 // Основная функция получения погоды
 async function fetchWeather(city) {
   const forbiddenNames = [
-    'россия',
-    'russia',
-    'ru',
-    'rf',
-    'сша',
-    'usa',
-    'united states',
-    'us',
-    'китай',
-    'china',
-    'cn',
-    'германия',
-    'germany',
-    'de',
-    'франция',
-    'france',
-    'fr',
-    'испания',
-    'spain',
-    'es',
-    'италия',
-    'italy',
-    'it',
+    'россия', 'russia', 'ru', 'rf',
+    'сша', 'usa', 'united states', 'us',
+    'китай', 'china', 'cn',
+    'германия', 'germany', 'de',
+    'франция', 'france', 'fr',
+    'испания', 'spain', 'es',
+    'италия', 'italy', 'it',
   ];
 
-  // 2. Проверяем введенное название
   const normalizedCity = city.toLowerCase().trim();
 
   if (forbiddenNames.includes(normalizedCity)) {
-    alert(
-      '⚠️ Пожалуйста, введите название ГОРОДА (например: Москва, Нью-Йорк), а не страны.',
-    );
-    hideLoading(); // Скрываем индикатор загрузки, если он есть
+    alert('⚠️ Пожалуйста, введите название ГОРОДА (например: Москва, Нью-Йорк), а не страны.');
+    hideLoading();
     if (elements.refreshBtn) elements.refreshBtn.classList.remove('loading');
-    return; // Прерываем выполнение функции
+    return;
   }
 
-  // 3. Дополнительная проверка: если введено очень короткое или общее название
   if (city.length < 2 || normalizedCity === 'город') {
     alert('⚠️ Пожалуйста, введите более конкретное название города.');
     hideLoading();
@@ -158,23 +139,19 @@ async function fetchWeather(city) {
     const data = await response.json();
     state.currentCity = data.name;
     localStorage.setItem('lastCity', data.name);
-    console.log('API вернул город:', data.name);
-
-    // Добавляем в историю с полными данными
     addToRecentCities(data);
-
     updateWeatherDisplay(data);
-    showWeatherCard();
 
-    if (elements.refreshBtn) {
-      setTimeout(() => elements.refreshBtn.classList.remove('loading'), 500);
+    if (state.currentForecastDays > 1) {
+      fetchWeatherForecast(city, state.currentForecastDays);
+    } else {
+      showWeatherCard();
     }
+
   } catch (error) {
     showError();
     console.error('Ошибка:', error);
-    if (elements.refreshBtn) elements.refreshBtn.classList.remove('loading');
   }
-
 }
 
 // Функция обновления интерфейса с данными о погоде
@@ -189,68 +166,38 @@ function updateWeatherDisplay(data) {
   const windSpeed = data.wind.speed;
   const pressure = data.main.pressure;
 
-  // 1. Обновляем название города и страны
   elements.cityName.textContent = `${cityName}, ${country}`;
-
-  // 2. Температура
   elements.tempValue.textContent = temp;
 
-  // 3. ПОЛУЧАЕМ ЭМОДЗИ ИКОНКУ (такую же как в истории)
   const weatherEmoji = getWeatherIcon(iconCode, description);
 
-  // 4. СОЗДАЕМ КОНТЕЙНЕР ДЛЯ ИКОНКИ И ОПИСАНИЯ
-  // Ищем или создаем контейнер для иконки и описания
-  let weatherEmojiContainer = document.querySelector(
-    '.weather-emoji-container',
-  );
-  let weatherDescriptionContainer = document.querySelector(
-    '.weather-description-container',
-  );
+  let weatherEmojiContainer = document.querySelector('.weather-emoji-container');
+  let weatherDescriptionContainer = document.querySelector('.weather-description-container');
 
   if (!weatherEmojiContainer) {
-    // Создаем контейнер для иконки
     weatherEmojiContainer = document.createElement('div');
     weatherEmojiContainer.className = 'weather-emoji-container';
-
-    // Создаем контейнер для описания
     weatherDescriptionContainer = document.createElement('div');
     weatherDescriptionContainer.className = 'weather-description-container';
 
-    // Находим родительский элемент (обычно после температуры)
     const tempElement = document.querySelector('.temperature');
     if (tempElement && tempElement.parentNode) {
-      const parent = tempElement.parentNode;
-
-      // Создаем общий контейнер
       const weatherInfoContainer = document.createElement('div');
       weatherInfoContainer.className = 'weather-info-container';
-
-      // Добавляем в него иконку и описание
       weatherInfoContainer.appendChild(weatherEmojiContainer);
       weatherInfoContainer.appendChild(weatherDescriptionContainer);
-
-      // Вставляем после температуры
-      tempElement.parentNode.insertBefore(
-        weatherInfoContainer,
-        tempElement.nextSibling,
-      );
+      tempElement.parentNode.insertBefore(weatherInfoContainer, tempElement.nextSibling);
     }
   }
 
-  // 5. ОБНОВЛЯЕМ ИКОНКУ И ОПИСАНИЕ
   weatherEmojiContainer.innerHTML = `<span class="weather-main-emoji">${weatherEmoji}</span>`;
-
-  // Описание с большой буквы
-  const capitalizedDescription =
-    description.charAt(0).toUpperCase() + description.slice(1);
+  const capitalizedDescription = description.charAt(0).toUpperCase() + description.slice(1);
   weatherDescriptionContainer.innerHTML = `<div class="weather-main-description">${capitalizedDescription}</div>`;
 
-  // 6. Скрываем старую иконку если она есть
   if (elements.weatherIcon) {
     elements.weatherIcon.style.display = 'none';
   }
 
-  // 7. Остальные данные
   elements.feelsLike.textContent = feelsLike + '°C';
   elements.humidity.textContent = humidity + '%';
   elements.windSpeed.textContent = windSpeed + ' м/с';
@@ -258,23 +205,60 @@ function updateWeatherDisplay(data) {
 
   updateCurrentDate();
 }
+
 // Вспомогательные функции
 function showLoading() {
   if (elements.loading) elements.loading.style.display = 'block';
-  if (elements.weatherCard) {
-    elements.weatherCard.style.display = 'none';
-    elements.weatherCard.classList.remove('show');
-  }
+  if (elements.weatherCard) elements.weatherCard.style.display = 'none';
+  if (elements.weatherForecast) elements.weatherForecast.classList.remove('show');
   if (elements.errorMessage) elements.errorMessage.style.display = 'none';
 }
 
 function showWeatherCard() {
   if (elements.loading) elements.loading.style.display = 'none';
   if (elements.errorMessage) elements.errorMessage.style.display = 'none';
+  if (elements.weatherForecast) {
+    elements.weatherForecast.style.display = 'none';
+    elements.weatherForecast.classList.remove('show');
+    elements.weatherForecast.innerHTML = '';
+  }
   if (elements.weatherCard) {
     elements.weatherCard.style.display = 'block';
-    setTimeout(() => elements.weatherCard.classList.add('show'), 10);
+    setTimeout(() => {
+      elements.weatherCard.classList.add('show');
+      setTimeout(() => {
+        if (elements.weatherCard) {
+          elements.weatherCard.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      }, 300);
+    }, 50);
   }
+}
+
+function showForecast() {
+  if (elements.weatherCard) {
+    elements.weatherCard.style.display = 'none';
+    elements.weatherCard.classList.remove('show');
+  }
+  if (elements.weatherForecast) {
+    elements.weatherForecast.style.display = 'block';
+    setTimeout(() => {
+      elements.weatherForecast.classList.add('show');
+      setTimeout(() => {
+        if (elements.weatherForecast) {
+          elements.weatherForecast.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      }, 300);
+    }, 50);
+  }
+  if (elements.loading) elements.loading.style.display = 'none';
+  if (elements.errorMessage) elements.errorMessage.style.display = 'none';
 }
 
 function showError() {
@@ -299,93 +283,63 @@ function updateCurrentDate() {
   elements.currentDate.textContent = now.toLocaleDateString('ru-RU', options);
 }
 
-// Функция добавления города в историю (с иконками)
-// Замените функцию addToRecentCities на эту:
+function hideLoading() {
+  if (elements.loading) elements.loading.style.display = 'none';
+  if (elements.refreshBtn) elements.refreshBtn.classList.remove('loading');
+}
 
+// Функции для истории городов
 function addToRecentCities(weatherData) {
-  // Проверяем, что данные корректны
-  if (!weatherData || !weatherData.name) {
-    console.error('Неверные данные для истории:', weatherData);
-    return;
-  }
+  if (!weatherData || !weatherData.name) return;
 
   const cityEntry = {
     name: weatherData.name,
-    icon: weatherData.weather?.[0]?.icon || '01d', // Сохраняем код иконки
+    icon: weatherData.weather?.[0]?.icon || '01d',
     temp: Math.round(weatherData.main?.temp || 0),
     description: weatherData.weather?.[0]?.description || '',
   };
 
-  console.log('Добавляем в историю:', cityEntry);
-
-  // Удаляем если уже есть (безопасная проверка)
   state.recentCities = state.recentCities.filter(
-    (item) =>
-      item.name &&
-      cityEntry.name &&
-      item.name.toLowerCase() !== cityEntry.name.toLowerCase(),
+      (item) => item.name && cityEntry.name &&
+          item.name.toLowerCase() !== cityEntry.name.toLowerCase()
   );
 
-  // Добавляем в начало
   state.recentCities.unshift(cityEntry);
-
-  // Ограничиваем 5 городами
-  if (state.recentCities.length > 5) {
-    state.recentCities = state.recentCities.slice(0, 5);
-  }
-
-  // Сохраняем
+  if (state.recentCities.length > 5) state.recentCities = state.recentCities.slice(0, 5);
   localStorage.setItem('recentCities', JSON.stringify(state.recentCities));
-
-  // Обновляем отображение
   updateRecentCitiesDisplay();
-}// Загрузка истории
+}
 
-// Отображение истории с иконками
 function updateRecentCitiesDisplay() {
   const citiesList = document.querySelector('.recent-cities-list');
   if (!citiesList) return;
 
   const recentCities = JSON.parse(localStorage.getItem('recentCities')) || [];
-
   if (recentCities.length === 0) {
-    citiesList.innerHTML =
-      '<div class="empty-history">История поиска пуста</div>';
+    citiesList.innerHTML = '<div class="empty-history">История поиска пуста</div>';
     return;
   }
 
   citiesList.innerHTML = '';
-
   recentCities.forEach((city, index) => {
     const cityElement = document.createElement('div');
     cityElement.className = 'recent-city-item';
-
-    // Получаем правильную иконку погоды
-    // Используем icon код из OpenWeatherMap если есть, иначе description
-    let weatherIcon;
-    if (city.icon) {
-      weatherIcon = getWeatherIcon(city.icon);
-    } else if (city.description) {
-      weatherIcon = getWeatherIconFromDescription(city.description, city.icon);
-    } else {
-      weatherIcon = getWeatherIconFromDescription('', city.icon);
-    }
+    const weatherIcon = city.icon ? getWeatherIcon(city.icon) : getWeatherIconFromDescription(city.description, city.icon);
 
     cityElement.innerHTML = `
-            <div class="recent-city-name-container">
-                <span class="weather-emoji">${weatherIcon}</span>
-                <span class="recent-city-name">${city.name}</span>
-            </div>
-            <div class="recent-city-temp-container">
-                <span class="recent-city-temp">${city.temp}°C</span>
-                <button class="recent-city-delete" data-index="${index}">×</button>
-            </div>
-        `;
+      <div class="recent-city-name-container">
+        <span class="weather-emoji">${weatherIcon}</span>
+        <span class="recent-city-name">${city.name}</span>
+      </div>
+      <div class="recent-city-temp-container">
+        <span class="recent-city-temp">${city.temp}°C</span>
+        <button class="recent-city-delete" data-index="${index}">×</button>
+      </div>
+    `;
 
     citiesList.appendChild(cityElement);
   });
 
-  // Добавляем обработчики событий для кнопок удаления
   document.querySelectorAll('.recent-city-delete').forEach((button) => {
     button.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -394,123 +348,23 @@ function updateRecentCitiesDisplay() {
     });
   });
 
-  // Добавляем обработчики событий для названий городов
   document.querySelectorAll('.recent-city-name').forEach((nameElement) => {
     nameElement.addEventListener('click', (e) => {
       const cityName = e.target.textContent;
       fetchWeather(cityName);
     });
   });
-}// Функция для получения иконки города
-function getWeatherIcon(iconCode, description = '') {
-  const iconMap = {
-    '01d': '☀️', // ясно день
-    '01n': '🌙', // ясно ночь
-    '02d': '⛅', // немного облаков день
-    '02n': '☁️🌙', // немного облаков ночь
-    '03d': '🌤️', // рассеянные облака день
-    '03n': '☁️🌙', // рассеянные облака ночь
-    '04d': '☁️', // облачно
-    '04n': '☁️', // облачно ночь
-    '09d': '🌧️', // ливень
-    '09n': '🌧️', // ливень ночь
-    '10d': '🌦️', // дождь день
-    '10n': '🌧️', // дождь ночь
-    '11d': '⛈️', // гроза день
-    '11n': '⛈️', // гроза ночь
-    '13d': '❄️', // снег день
-    '13n': '❄️', // снег ночь
-    '50d': '🌫️', // туман день
-    '50n': '🌫️', // туман ночь
-  };
-
-  // Сначала пробуем по iconCode
-  if (iconCode && iconMap[iconCode]) {
-    return iconMap[iconCode];
-  }
-
-  // Если нет, используем описание
-  const desc = description.toLowerCase();
-  if (desc.includes('ясн') || desc.includes('clear')) {
-    return iconCode?.endsWith('n') ? '🌙' : '☀️';
-  } else if (desc.includes('солн') || desc.includes('sun')) {
-    return '☀️';
-  } else if (desc.includes('облач')) {
-    if (desc.includes('пасмурн') || desc.includes('overcast')) {
-      return '☁️';
-    }
-    if (desc.includes('небольш')) {
-      return iconCode?.endsWith('n') ? '☁️🌙' : '⛅';
-    }
-    return '🌤️';
-  } else if (desc.includes('дожд')) {
-    if (desc.includes('ливень') || desc.includes('shower')) {
-      return '🌧️';
-    }
-    return '🌦️';
-  } else if (desc.includes('снег')) {
-    return '❄️';
-  } else if (desc.includes('гроз')) {
-    return '⛈️';
-  } else if (desc.includes('туман')) {
-    return '🌫️';
-  }
-
-  return '🌡️';
 }
-// Альтернатива: более точные иконки на основе описания
-function getWeatherIconFromDescription(description, iconCode = '') {
-  const desc = description.toLowerCase();
 
-  if (desc.includes('ясн') || desc.includes('clear')) {
-    return iconCode?.endsWith('n') ? '🌙' : '☀️';
-  } else if (desc.includes('солн') || desc.includes('sun')) {
-    return '☀️';
-  } else if (desc.includes('облач') || desc.includes('cloud')) {
-    if (desc.includes('пасмурн') || desc.includes('overcast')) {
-      return '☁️☁️';
-    }
-    if (desc.includes('небольш') || desc.includes('few')) {
-      return iconCode?.endsWith('n') ? '☁️🌙' : '⛅';
-    }
-    return '☁️';
-  } else if (desc.includes('дожд') || desc.includes('rain')) {
-    if (
-      desc.includes('ливень') ||
-      desc.includes('shower') ||
-      desc.includes('heavy')
-    ) {
-      return '🌧️';
-    }
-    return iconCode?.endsWith('n') ? '🌧️' : '🌦️';
-  } else if (desc.includes('снег') || desc.includes('snow')) {
-    return '❄️';
-  } else if (desc.includes('гроз') || desc.includes('thunder')) {
-    return '⛈️';
-  } else if (
-    desc.includes('туман') ||
-    desc.includes('fog') ||
-    desc.includes('mist')
-  ) {
-    return '🌫️';
-  } else if (desc.includes('ветер') || desc.includes('wind')) {
-    return '💨';
-  }
-
-  // Если не распознали, используем код иконки
-  return getWeatherIcon(iconCode);
-}function removeCityFromHistory(index) {
+function removeCityFromHistory(index) {
   const recentCities = JSON.parse(localStorage.getItem('recentCities')) || [];
   recentCities.splice(index, 1);
   localStorage.setItem('recentCities', JSON.stringify(recentCities));
   updateRecentCitiesDisplay();
 }
 
-// Функция для загрузки истории городов
 function loadRecentCities() {
   const recentCities = JSON.parse(localStorage.getItem('recentCities')) || [];
-
-  // Если нет городов в истории, добавляем примеры
   if (recentCities.length === 0) {
     const defaultCities = [
       { name: 'Москва', temp: '-4' },
@@ -518,17 +372,408 @@ function loadRecentCities() {
     ];
     localStorage.setItem('recentCities', JSON.stringify(defaultCities));
   }
-
   updateRecentCitiesDisplay();
 }
 
-// Загружаем историю при загрузке страницы
 function preventTextSelection() {
-  document.addEventListener(
-    'mousedown',
-    (e) => {
-      if (e.detail > 1) e.preventDefault();
-    },
-    false,
-  );
+  document.addEventListener('mousedown', (e) => {
+    if (e.detail > 1) e.preventDefault();
+  }, false);
+}
+
+// Функции для иконок погоды
+function getWeatherIcon(iconCode, description = '') {
+  const iconMap = {
+    '01d': '☀️', '01n': '🌙',
+    '02d': '⛅', '02n': '☁️🌙',
+    '03d': '🌤️', '03n': '☁️🌙',
+    '04d': '☁️', '04n': '☁️',
+    '09d': '🌧️', '09n': '🌧️',
+    '10d': '🌦️', '10n': '🌧️',
+    '11d': '⛈️', '11n': '⛈️',
+    '13d': '❄️', '13n': '❄️',
+    '50d': '🌫️', '50n': '🌫️',
+  };
+
+  if (iconCode && iconMap[iconCode]) return iconMap[iconCode];
+
+  const desc = description.toLowerCase();
+  if (desc.includes('ясн') || desc.includes('clear')) {
+    return iconCode?.endsWith('n') ? '🌙' : '☀️';
+  } else if (desc.includes('солн') || desc.includes('sun')) {
+    return '☀️';
+  } else if (desc.includes('облач')) {
+    if (desc.includes('пасмурн') || desc.includes('overcast')) return '☁️';
+    if (desc.includes('небольш')) return iconCode?.endsWith('n') ? '☁️🌙' : '⛅';
+    return '🌤️';
+  } else if (desc.includes('дожд')) {
+    if (desc.includes('ливень') || desc.includes('shower')) return '🌧️';
+    return '🌦️';
+  } else if (desc.includes('снег')) return '❄️';
+  else if (desc.includes('гроз')) return '⛈️';
+  else if (desc.includes('туман')) return '🌫️';
+
+  return '🌡️';
+}
+
+function getWeatherIconFromDescription(description, iconCode = '') {
+  const desc = description.toLowerCase();
+  if (desc.includes('ясн') || desc.includes('clear')) {
+    return iconCode?.endsWith('n') ? '🌙' : '☀️';
+  } else if (desc.includes('солн') || desc.includes('sun')) {
+    return '☀️';
+  } else if (desc.includes('облач') || desc.includes('cloud')) {
+    if (desc.includes('пасмурн') || desc.includes('overcast')) return '☁️☁️';
+    if (desc.includes('небольш') || desc.includes('few')) return iconCode?.endsWith('n') ? '☁️🌙' : '⛅';
+    return '☁️';
+  } else if (desc.includes('дожд') || desc.includes('rain')) {
+    if (desc.includes('ливень') || desc.includes('shower') || desc.includes('heavy')) return '🌧️';
+    return iconCode?.endsWith('n') ? '🌧️' : '🌦️';
+  } else if (desc.includes('снег') || desc.includes('snow')) return '❄️';
+  else if (desc.includes('гроз') || desc.includes('thunder')) return '⛈️';
+  else if (desc.includes('туман') || desc.includes('fog') || desc.includes('mist')) return '🌫️';
+  else if (desc.includes('ветер') || desc.includes('wind')) return '💨';
+
+  return getWeatherIcon(iconCode);
+}
+
+// Функции для работы с прогнозом
+function toggleForecast(period) {
+  document.querySelectorAll('.forecast-btn').forEach((btn) => {
+    btn.classList.remove('active');
+    if (btn.dataset.days === period.toString()) {
+      btn.classList.add('active');
+    }
+  });
+
+  state.currentForecastDays = period;
+
+  if (period === 1 || period === '1') {
+    if (elements.weatherForecast) elements.weatherForecast.innerHTML = '';
+    showWeatherCard();
+    return;
+  }
+
+  if (state.currentCity) {
+    showLoading();
+    fetchWeatherForecast(state.currentCity, period);
+  }
+}
+
+async function fetchWeatherForecast(city, period) {
+  try {
+    showLoading();
+    const cacheKey = `forecast_${city.toLowerCase()}`;
+    const cachedData = localStorage.getItem(cacheKey);
+    const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+
+    if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime)) < 10 * 60 * 1000) {
+      const data = JSON.parse(cachedData);
+      processForecastData(data, period);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}&lang=ru`;
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) throw new Error(`Ошибка ${response.status}: Не удалось получить прогноз`);
+
+    const data = await response.json();
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+    localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+    processForecastData(data, period);
+
+  } catch (error) {
+    console.error('❌ Ошибка прогноза:', error);
+    let errorMessage = 'Не удалось загрузить прогноз';
+    if (error.name === 'AbortError') {
+      errorMessage = 'Таймаут запроса. Проверьте интернет-соединение';
+    } else if (error.message.includes('404')) {
+      errorMessage = 'Город не найден';
+    }
+    showForecastError(errorMessage);
+    setTimeout(() => showWeatherCard(), 2000);
+  }
+}
+
+function processForecastData(data, period) {
+  if (period == 2) {
+    displayTomorrowForecast(data);
+  } else if (period == 3) {
+    displayDayAfterTomorrowForecast(data);
+  } else if (period == 5 || period == 7) {
+    display5DayForecast(data);
+  } else {
+    display5DayForecast(data);
+  }
+
+  setTimeout(() => showForecast(), 100);
+}
+
+// Отображение прогнозов
+function displayTomorrowForecast(data) {
+  const forecastContainer = elements.weatherForecast;
+  forecastContainer.innerHTML = '';
+
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toLocaleDateString('ru-RU');
+
+  const tomorrowData = data.list.filter(item => {
+    const itemDate = new Date(item.dt * 1000);
+    return itemDate.toLocaleDateString('ru-RU') === tomorrowStr;
+  });
+
+  if (tomorrowData.length === 0) {
+    forecastContainer.innerHTML = '<div class="forecast-error">Нет данных на завтра</div>';
+    return;
+  }
+
+  const temps = tomorrowData.map(item => item.main.temp);
+  const minTemp = Math.round(Math.min(...temps));
+  const maxTemp = Math.round(Math.max(...temps));
+  const avgTemp = Math.round(temps.reduce((a, b) => a + b, 0) / temps.length);
+  const icons = tomorrowData.map(item => item.weather[0].icon);
+  const mostCommonIcon = getMostCommonIcon(icons);
+
+  const title = document.createElement('h3');
+  title.className = 'forecast-title';
+  title.textContent = `Погода на завтра (${tomorrow.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}) в ${data.city.name}`;
+  forecastContainer.appendChild(title);
+
+  const mainInfo = document.createElement('div');
+  mainInfo.className = 'tomorrow-main';
+  mainInfo.innerHTML = `
+    <div class="tomorrow-icon-temp">
+      <img src="https://openweathermap.org/img/wn/${mostCommonIcon}@2x.png" alt="Погода" class="big-weather-icon">
+      <div class="tomorrow-temp">${avgTemp}°C</div>
+    </div>
+    <div class="tomorrow-minmax">
+      <div class="minmax-item">
+        <i class="fas fa-temperature-high"></i>
+        <span>Макс: ${maxTemp}°C</span>
+      </div>
+      <div class="minmax-item">
+        <i class="fas fa-temperature-low"></i>
+        <span>Мин: ${minTemp}°C</span>
+      </div>
+    </div>
+  `;
+  forecastContainer.appendChild(mainInfo);
+
+  const hourlyTitle = document.createElement('h4');
+  hourlyTitle.className = 'hourly-title';
+  hourlyTitle.textContent = 'Почасовой прогноз:';
+  forecastContainer.appendChild(hourlyTitle);
+
+  const hourlyContainer = document.createElement('div');
+  hourlyContainer.className = 'hourly-forecast';
+
+  const keyHours = [6, 9, 12, 15, 18, 21];
+  keyHours.forEach(hour => {
+    const hourData = tomorrowData.find(item => {
+      const itemHour = new Date(item.dt * 1000).getHours();
+      return itemHour === hour;
+    });
+
+    if (hourData) {
+      const hourItem = document.createElement('div');
+      hourItem.className = 'hour-item';
+      hourItem.innerHTML = `
+        <div class="hour-time">${hour}:00</div>
+        <img src="https://openweathermap.org/img/wn/${hourData.weather[0].icon}.png" alt="${hourData.weather[0].description}">
+        <div class="hour-temp">${Math.round(hourData.main.temp)}°C</div>
+        <div class="hour-desc">${hourData.weather[0].description}</div>
+      `;
+      hourlyContainer.appendChild(hourItem);
+    }
+  });
+
+  forecastContainer.appendChild(hourlyContainer);
+  addBackButton(forecastContainer);
+}
+
+function displayDayAfterTomorrowForecast(data) {
+  const forecastContainer = elements.weatherForecast;
+  forecastContainer.innerHTML = '';
+
+  const dayAfter = new Date();
+  dayAfter.setDate(dayAfter.getDate() + 2);
+  const dayAfterStr = dayAfter.toLocaleDateString('ru-RU');
+
+  const dayAfterData = data.list.filter((item) => {
+    const itemDate = new Date(item.dt * 1000);
+    return itemDate.toLocaleDateString('ru-RU') === dayAfterStr;
+  });
+
+  if (dayAfterData.length === 0) {
+    forecastContainer.innerHTML = '<div class="forecast-error">Нет данных на послезавтра</div>';
+    return;
+  }
+
+  const temps = dayAfterData.map((item) => item.main.temp);
+  const minTemp = Math.round(Math.min(...temps));
+  const maxTemp = Math.round(Math.max(...temps));
+  const avgTemp = Math.round(temps.reduce((a, b) => a + b, 0) / temps.length);
+  const icons = dayAfterData.map((item) => item.weather[0].icon);
+  const mostCommonIcon = getMostCommonIcon(icons);
+
+  const title = document.createElement('h3');
+  title.className = 'forecast-title';
+  title.textContent = `Погода на послезавтра (${dayAfter.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}) в ${data.city.name}`;
+  forecastContainer.appendChild(title);
+
+  const mainInfo = document.createElement('div');
+  mainInfo.className = 'tomorrow-main';
+  mainInfo.innerHTML = `
+    <div class="tomorrow-icon-temp">
+      <img src="https://openweathermap.org/img/wn/${mostCommonIcon}@2x.png" alt="Погода" class="big-weather-icon">
+      <div class="tomorrow-temp">${avgTemp}°C</div>
+    </div>
+    <div class="tomorrow-minmax">
+      <div class="minmax-item">
+        <i class="fas fa-temperature-high"></i>
+        <span>Макс: ${maxTemp}°C</span>
+      </div>
+      <div class="minmax-item">
+        <i class="fas fa-temperature-low"></i>
+        <span>Мин: ${minTemp}°C</span>
+      </div>
+    </div>
+  `;
+  forecastContainer.appendChild(mainInfo);
+
+  const noteElement = document.createElement('div');
+  noteElement.className = 'day-after-note';
+  noteElement.innerHTML = `
+    <i class="fas fa-info-circle"></i>
+    <span>Это прогноз на 2 дня вперёд</span>
+  `;
+  forecastContainer.appendChild(noteElement);
+
+  const hourlyTitle = document.createElement('h4');
+  hourlyTitle.className = 'hourly-title';
+  hourlyTitle.textContent = 'Почасовой прогноз:';
+  forecastContainer.appendChild(hourlyTitle);
+
+  const hourlyContainer = document.createElement('div');
+  hourlyContainer.className = 'hourly-forecast';
+
+  const keyHours = [6, 9, 12, 15, 18, 21];
+  keyHours.forEach((hour) => {
+    const hourData = dayAfterData.find((item) => {
+      const itemHour = new Date(item.dt * 1000).getHours();
+      return itemHour === hour;
+    });
+
+    if (hourData) {
+      const hourItem = document.createElement('div');
+      hourItem.className = 'hour-item';
+      hourItem.innerHTML = `
+        <div class="hour-time">${hour}:00</div>
+        <img src="https://openweathermap.org/img/wn/${hourData.weather[0].icon}.png" alt="${hourData.weather[0].description}">
+        <div class="hour-temp">${Math.round(hourData.main.temp)}°C</div>
+        <div class="hour-desc">${hourData.weather[0].description}</div>
+      `;
+      hourlyContainer.appendChild(hourItem);
+    }
+  });
+
+  forecastContainer.appendChild(hourlyContainer);
+  addBackButton(forecastContainer);
+}
+
+function display5DayForecast(data) {
+  const forecastContainer = elements.weatherForecast;
+  forecastContainer.innerHTML = '';
+
+  const title = document.createElement('h3');
+  title.className = 'forecast-title';
+  title.textContent = `Прогноз на 5 дней в ${data.city.name}`;
+  forecastContainer.appendChild(title);
+
+  const daysContainer = document.createElement('div');
+  daysContainer.className = 'five-day-forecast';
+
+  const dailyData = [];
+  const seenDays = new Set();
+
+  data.list.forEach(item => {
+    const date = new Date(item.dt * 1000);
+    const dateStr = date.toLocaleDateString('ru-RU');
+
+    if (!seenDays.has(dateStr) && dailyData.length < 5) {
+      seenDays.add(dateStr);
+      dailyData.push({
+        date: dateStr,
+        dayName: getDayOfWeek(date),
+        icon: item.weather[0].icon,
+        temp: Math.round(item.main.temp),
+        description: item.weather[0].description
+      });
+    }
+  });
+
+  dailyData.forEach(day => {
+    const dayCard = document.createElement('div');
+    dayCard.className = 'five-day-card';
+    dayCard.innerHTML = `
+      <div class="day-name">${day.dayName}</div>
+      <div class="day-date">${day.date}</div>
+      <img src="https://openweathermap.org/img/wn/${day.icon}.png" alt="${day.description}" class="day-icon">
+      <div class="day-temp">${day.temp}°C</div>
+      <div class="day-desc">${day.description}</div>
+    `;
+    daysContainer.appendChild(dayCard);
+  });
+
+  forecastContainer.appendChild(daysContainer);
+  addBackButton(forecastContainer);
+}
+
+// Вспомогательные функции
+function getMostCommonIcon(icons) {
+  const counts = {};
+  icons.forEach(icon => {
+    counts[icon] = (counts[icon] || 0) + 1;
+  });
+
+  let maxIcon = '01d';
+  let maxCount = 0;
+
+  for (const [icon, count] of Object.entries(counts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      maxIcon = icon;
+    }
+  }
+
+  return maxIcon;
+}
+
+function getDayOfWeek(date) {
+  const days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+  return days[date.getDay()];
+}
+
+function addBackButton(container) {
+  const backBtn = document.createElement('button');
+  backBtn.className = 'back-to-current-btn';
+  backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> Назад к текущей погоде';
+  backBtn.addEventListener('click', () => toggleForecast(1));
+  container.appendChild(backBtn);
+}
+
+function showForecastError(message) {
+  const forecastContainer = elements.weatherForecast;
+  forecastContainer.innerHTML = `<div class="forecast-error">${message}</div>`;
+  showForecast();
 }
