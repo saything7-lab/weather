@@ -266,17 +266,38 @@ function addToRecentCities(cityData) {
   updateRecentCitiesDisplay();
 }
 
+// В инициализации, если история пуста
 function loadRecentCities() {
   const saved = localStorage.getItem('recentCities');
   if (saved) {
     try {
       state.recentCities = JSON.parse(saved);
-      updateRecentCitiesDisplay();
     } catch (error) {
       console.error('Ошибка загрузки истории:', error);
       state.recentCities = [];
     }
+  } else {
+    // Пример начальных данных (можно убрать)
+    state.recentCities = [
+      {
+        city: "Москва",
+        country: "RU",
+        icon: "04d",
+        temp: 5,
+        description: "облачно",
+        timestamp: Date.now()
+      },
+      {
+        city: "Лондон",
+        country: "GB",
+        icon: "10d",
+        temp: 12,
+        description: "небольшой дождь",
+        timestamp: Date.now() - 100000
+      }
+    ];
   }
+  updateRecentCitiesDisplay();
 }
 function updateRecentCitiesDisplay() {
   elements.recentCities.innerHTML = '';
@@ -402,4 +423,5 @@ function preventTextSelection() {
     `;
   document.head.appendChild(style);
 }
+
 
