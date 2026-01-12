@@ -489,19 +489,3 @@ function preventTextSelection() {
     false,
   );
 }
-function searchCity(cityName) {
-  console.log('Поиск города:', cityName);
-
-  // Устанавливаем значение в поле ввода
-  const cityInput = document.querySelector('.city-input');
-  if (cityInput) {
-    cityInput.value = cityName;
-  }
-
-  // Вызываем вашу существующую функцию fetchWeather
-  if (typeof fetchWeather === 'function') {
-    fetchWeather(cityName);
-  } else {
-    console.error('Функция fetchWeather не найдена');
-  }
-}
