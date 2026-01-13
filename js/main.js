@@ -1,5 +1,3 @@
-// Конфигурация
-const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 // Элементы DOM
 const elements = {
@@ -130,8 +128,7 @@ async function fetchWeather(city) {
 
   try {
     showLoading();
-    const url = `${BASE_URL}?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}&lang=ru`;
-    const response = await fetch(url);
+    const response = await fetch(`/weather?city=${encodeURIComponent(city)}`);
 
     if (!response.ok) throw new Error('Город не найден');
 
