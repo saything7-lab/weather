@@ -39,7 +39,7 @@ async function fetchWeatherForecast(city, period) {
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
-    const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}&lang=ru`;
+    const url = `/forecast?city=${encodeURIComponent(city)}`;
 
     const response = await fetch(url, {
       signal: controller.signal,
