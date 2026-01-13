@@ -1,5 +1,4 @@
 // Конфигурация
-const API_KEY  = '13aa892bb472ea7a1b70affef77e10f9';
 const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 // Элементы DOM
