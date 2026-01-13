@@ -39,7 +39,7 @@ async function fetchWeatherForecast(city, period) {
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
-    const url = `/forecast?city=${encodeURIComponent(city)}`;
+    const url = `/forecast/?city=${encodeURIComponent(city)}`;
     const aa = 1;
     const response = await fetch(url, {
       signal: controller.signal,

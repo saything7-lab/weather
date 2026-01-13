@@ -128,7 +128,7 @@ async function fetchWeather(city) {
 
   try {
     showLoading();
-    const response = await fetch(`/weather?city=${encodeURIComponent(city)}`);
+    const response = await fetch(`/weather/?city=${encodeURIComponent(city)}`);
 
     if (!response.ok) throw new Error('Город не найден');
 
