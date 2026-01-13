@@ -52,49 +52,6 @@ cityInput.addEventListener('input', async (e) => {
     showSuggestions(localResults);
   }
 
-  /*
-    if (query.length >= 2) {
-      suggestTimeout = setTimeout(async () => {
-        try {
-          if (suggestCache[query]) {
-            const allResults = [...localResults, ...suggestCache[query]];
-            showSuggestions(allResults);
-            return;
-          }
-  
-          const response = await fetch(
-              `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=5&appid=YOUR_KEY`,
-          );
-  
-          const data = await response.json();
-  
-  // 1) если статус не 2xx — не пытаемся map, выводим локальные подсказки
-          if (!response.ok) {
-            console.error('OpenWeather error:', response.status, data);
-            showSuggestions(localResults);
-            return;
-          }
-  
-  // 2) если пришло не то, что ожидаем — тоже не map
-          if (!Array.isArray(data)) {
-            console.error('Unexpected API shape:', data);
-            showSuggestions(localResults);
-            return;
-          }
-  
-          const cityNames = data.map(c => c.name).filter(Boolean);
-          suggestCache[query] = cityNames;
-  
-          const allResults = [...localResults, ...cityNames];
-          showSuggestions(allResults);
-  
-        } catch (error) {
-          console.error('Ошибка при поиске городов:', error);
-          showSuggestions(localResults);
-        }
-      }, 700);
-    }
-  */
 });
 
 suggestContainer.addEventListener('click', (e) => {
